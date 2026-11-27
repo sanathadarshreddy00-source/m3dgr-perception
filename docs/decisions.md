@@ -285,3 +285,32 @@ bridge setup needs a ROS 1 installation, which this project does not use.
 
 **Consequences.** The conversion is a pipeline stage with its own check:
 message counts and stamps of the converted bag must match docs/data.md.
+
+---
+
+## D-012: Development container simplifications
+
+**Date:** 2026-11-27 · **Status:** accepted
+
+**Context.** The ROS 2 image (`docker/ros.Dockerfile`) is for development:
+SLAM, bag playback and building ROS packages.
+
+**Decision.**
+- **apt packages are not version-pinned.** The base image is pinned by
+  digest, but `apt-get install` fetches the current version. The ROS apt
+  repository keeps only the latest version of each package, so exact pins
+  would break as soon as a package is updated.
+- **The container runs as root.** That is the usual default for development
+  containers, and Docker Desktop bind mounts on Windows are not affected by
+  file ownership.
+
+**Alternatives.**
+- *ROS snapshot repositories* (dated, frozen copies of the ROS apt
+  repository) make apt installs exactly repeatable. This is the fix to adopt
+  if package drift ever breaks a build.
+- *A non-root user:* the right choice for a deployment image. It is
+  reconsidered for the Goal 3 image.
+
+**Consequences.** Rebuilding the image on a later date can produce slightly
+different package versions. The smoke test `docker/check_ros.sh` is rerun
+after every rebuild.
