@@ -32,6 +32,27 @@ documentation.
 Details, measurements and their sources are in [docs/data.md](docs/data.md).
 Raw data is never modified and is not stored in this repository.
 
+## Repository layout
+
+```
+src/m3dgr/          Python package
+  core/             math and domain types; no I/O, no ROS
+  io/               bags, trajectory files, calibration
+  pipelines/        stages combining core and io
+  cli/              one command per stage
+ros2_ws/src/        ROS 2 packages
+docker/             one Dockerfile per environment
+configs/            all parameters, including calibration with its source
+experiments/        one record per run: config, commit, metrics, verdict
+tests/fixtures/     small test data cut from the real bag
+scripts/            one-off scripts (e.g. the data inventory)
+docs/               data inventory, conventions, decision log
+data/, outputs/     not in git; data/raw/ is read-only
+```
+
+Most folders are empty until the first stage that needs them. Conventions
+for contributing are in [docs/conventions.md](docs/conventions.md).
+
 ## Goals
 
 ### 1. Trajectory estimation and comparison

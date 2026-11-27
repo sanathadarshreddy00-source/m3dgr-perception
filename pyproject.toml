@@ -8,6 +8,10 @@ dependencies = [
     "rosbags>=0.10",
 ]
 
-[tool.uv]
-# No importable package yet; the project layout is decided in Phase 3.
-package = false
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Import name differs from the distribution name.
+module-name = "m3dgr"
