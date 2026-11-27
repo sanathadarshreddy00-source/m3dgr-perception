@@ -1,0 +1,9 @@
+# Default: normalize to LF in repo, checkout with platform line endings
+* text=auto
+
+# Shell scripts must always use LF so they run correctly in WSL/Linux
+*.sh text eol=lf
+
+# Windows batch files use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf

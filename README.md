@@ -1,0 +1,112 @@
+# M3DGR Outdoor01: Multi-Sensor Trajectory Estimation and 3D Reconstruction
+
+> **Status:** project charter, pre-implementation. Nothing below has been
+> built yet. This document states what the project sets out to do and how
+> results will be judged. It will be updated as work lands.
+
+## Purpose
+
+This project uses one recorded robot run, the `Outdoor01` sequence from the
+[M3DGR dataset](https://github.com/sjtuyinjie/M3DGR), to work through the core
+of a 3D perception stack end to end: estimating where the robot went,
+reconstructing what it saw, and running perception as a live system.
+
+## Data
+
+A single ROS1 bag, `Outdoor01.bag` (about 6.5 GB), plus `Outdoor01.txt`,
+believed to be the reference trajectory in TUM format. The bag contains, per
+the dataset description (to be confirmed by a data inventory):
+
+- RGB and aligned depth from an Intel RealSense D435i
+- a 360° camera
+- two Livox LiDARs: Mid-360 and Avia
+- IMUs (Mid-360, Avia, camera)
+- two GNSS receivers
+- an onboard odometry topic (`/odom`)
+
+Raw data is never modified and is not stored in this repository.
+
+## Goals
+
+### 1. Trajectory estimation and comparison
+
+Estimate the robot's trajectory with several independent methods and compare
+each against the reference trajectory:
+
+- onboard odometry (`/odom`), as provided
+- LiDAR(-inertial) SLAM, run separately on the Mid-360 and the Avia
+- image-based Structure-from-Motion (COLMAP or similar)
+
+**Success criteria**
+
+- Every method either produces a trajectory over the sequence or has a
+  documented, explained failure (for example, SfM failing to initialise on
+  low-parallax straight driving).
+- Errors reported as absolute trajectory error (ATE) and relative pose error
+  (RPE), using an alignment appropriate to each method: rigid alignment for
+  metric methods, similarity alignment for scale-ambiguous monocular SfM.
+- Results broken down by trajectory segment (for example, straights vs.
+  turns), not only as whole-sequence averages.
+- The project's own metric implementation agrees with an established tool
+  (`evo`) within a stated tolerance.
+
+### 2. 3D reconstruction
+
+Reconstruct the scene from both sensing modalities:
+
+- **LiDAR-based:** a point-cloud map from motion-corrected scans registered
+  with estimated poses, and a surface mesh from that map.
+- **Image-based:** neural reconstruction (NeRF and 3D Gaussian splatting),
+  optionally supervised with depth.
+
+**Success criteria**
+
+- Image metrics (PSNR, SSIM, LPIPS) computed on held-out views that are
+  chosen before training and never used for model or checkpoint selection.
+- Geometric accuracy reported in metres against a stated reference, with the
+  choice of reference and its own limitations made explicit.
+- A comparison of how pose quality (reference vs. estimated trajectories)
+  affects reconstruction quality.
+
+### 3. Deployment as a live system
+
+Run the perception stack the way it would run on a robot:
+
+- a containerised ROS 2 system that replays the bag at real-time speed
+- at least one perception component written as a C++ ROS 2 node
+
+**Success criteria**
+
+- The system runs from a documented single command on a fresh machine with
+  Docker installed.
+- Latency, throughput (whether it keeps up with real time), CPU and memory
+  are measured and reported.
+- The C++ node is benchmarked against a Python implementation of the same
+  step.
+
+### 4. Engineering practice
+
+- Every environment can be rebuilt from files in this repository.
+- Each pipeline stage runs from one command, driven by a saved config.
+- Each run records its config, seed and git commit alongside its outputs.
+- Automated tests and linting run on every change, using a small fixture
+  rather than the full bag.
+
+## Out of scope
+
+- Developing new SLAM or reconstruction methods.
+- Running on physical robot hardware (the containers are meant to make that
+  possible later, but it is not a goal here).
+- Other M3DGR sequences. They may be added later to test generalisation.
+- Web serving or production APIs.
+
+## Open questions
+
+To be resolved by the data inventory and recorded in `docs/decisions.md`:
+
+- What exactly `Outdoor01.txt` is (source, accuracy, time base) and how its
+  timestamps align with the bag.
+- Which sensor extrinsics and calibrations are available, and from where.
+- How the Livox custom message types convert to ROS 2.
+- What serves as the reference for geometric accuracy, given that no
+  independent ground-truth geometry is known to exist for this sequence.

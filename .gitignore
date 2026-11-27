@@ -1,0 +1,31 @@
+# Editor / tool internals
+.venv/
+.venv310/
+.vscode/
+.claude/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Raw and derived data (too large / regenerable / downloaded)
+*.bag
+*.db3
+*.sqlite3
+data/raw/
+data/interim/
+data/colmap/
+data/processed/
+logs/
+outputs/
+renders/
+
+# Model weights and point clouds
+*.pth
+*.pt
+*.ckpt
+*.ply
+*.pcd
+*.las
+*.laz
