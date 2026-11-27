@@ -1,0 +1,14 @@
+# Container environments for this project. See docker/ for each image.
+name: m3dgr
+services:
+  ros:
+    build:
+      context: .
+      dockerfile: docker/ros.Dockerfile
+    image: m3dgr/ros:jazzy
+    working_dir: /ws
+    volumes:
+      - .:/ws
+      # Raw data is mounted read-only, so nothing in a container can modify it
+      # (docs/conventions.md, rule 1).
+      - ./data/raw:/ws/data/raw:ro
