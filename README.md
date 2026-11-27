@@ -13,17 +13,23 @@ reconstructing what it saw, and running perception as a live system.
 
 ## Data
 
-A single ROS1 bag, `Outdoor01.bag` (about 6.5 GB), plus `Outdoor01.txt`,
-believed to be the reference trajectory in TUM format. The bag contains, per
-the dataset description (to be confirmed by a data inventory):
+The data is a single ROS 1 bag, `Outdoor01.bag` (6.5 GB, 411.6 s), plus
+`Outdoor01.txt`, a reference trajectory. The bag contains:
 
-- RGB and aligned depth from an Intel RealSense D435i
-- a 360° camera
-- two Livox LiDARs: Mid-360 and Avia
-- IMUs (Mid-360, Avia, camera)
+- RGB and aligned depth from an Intel RealSense D435i, at 30 Hz
+- a 360° camera (Insta360 X4), at 15 Hz
+- two Livox LiDARs, the Mid-360 and the Avia, each at 10 Hz
+- three IMUs (Mid-360, Avia and the camera), each at about 200 Hz
 - two GNSS receivers
-- an onboard odometry topic (`/odom`)
+- wheel odometry (`/odom`), at 20 Hz
 
+`Outdoor01.txt` holds **positions only**; orientation is not provided. It is
+derived from the RTK GNSS fix in the bag. Its accuracy is not yet established.
+
+The bag contains no calibration. Calibration comes from the M3DGR
+documentation.
+
+Details, measurements and their sources are in [docs/data.md](docs/data.md).
 Raw data is never modified and is not stored in this repository.
 
 ## Goals
@@ -102,11 +108,7 @@ Run the perception stack the way it would run on a robot:
 
 ## Open questions
 
-To be resolved by the data inventory and recorded in `docs/decisions.md`:
-
-- What exactly `Outdoor01.txt` is (source, accuracy, time base) and how its
-  timestamps align with the bag.
-- Which sensor extrinsics and calibrations are available, and from where.
-- How the Livox custom message types convert to ROS 2.
+- How accurate the reference trajectory is, and which point on the robot it
+  refers to. See [docs/data.md](docs/data.md).
 - What serves as the reference for geometric accuracy, given that no
   independent ground-truth geometry is known to exist for this sequence.
