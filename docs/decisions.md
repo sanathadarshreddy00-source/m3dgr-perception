@@ -314,3 +314,38 @@ SLAM, bag playback and building ROS packages.
 **Consequences.** Rebuilding the image on a later date can produce slightly
 different package versions. The smoke test `docker/check_ros.sh` is rerun
 after every rebuild.
+
+---
+
+## D-013: Livox message types as definition-only packages
+
+**Date:** 2026-11-27 · **Status:** accepted. It is implemented at the first
+step that plays the bag back in ROS 2.
+
+**Context.** ROS 2 can only publish or subscribe to a message type whose
+package is built and installed. `ros2 bag play` skips topics with unknown
+types, and FAST-LIO2 is compiled against `livox_ros_driver2/msg/CustomMsg`.
+The Avia publishes `livox_ros_driver/CustomMsg` and the Mid-360 publishes
+`livox_ros_driver2/CustomMsg`. The fields are identical, but the package names
+differ, so ROS treats them as two types (docs/data.md). Converting the bag does
+not need these packages, because `rosbags-convert` uses the definitions stored
+in the bag.
+
+**Decision.** Add two minimal ROS 2 packages to `ros2_ws/src`,
+`livox_ros_driver` and `livox_ros_driver2`. Each contains only its message
+definitions, taken from the definitions stored in the bag.
+
+**Alternatives.**
+- *The official `livox_ros_driver2`:* requires building the Livox-SDK2
+  hardware library, which is not needed for recorded data, and covers only the
+  Mid-360's type.
+- *One package, with the Avia relabelled during conversion:* the converted bag
+  would no longer match the raw bag, so its message types could not be checked
+  directly against docs/data.md.
+
+**Consequences.**
+- The converted bag keeps both original types.
+- Whether FAST-LIO2 needs the Avia's messages relabelled is decided at the
+  FAST-LIO2 stage (D-007).
+- The license of the Livox driver sources is checked before their
+  definitions are copied.
