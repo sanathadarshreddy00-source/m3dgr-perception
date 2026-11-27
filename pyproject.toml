@@ -1,0 +1,13 @@
+[project]
+name = "m3dgr-perception"
+version = "0.0.0"
+description = "Multi-sensor trajectory estimation and 3D reconstruction on M3DGR Outdoor01"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Reads ROS 1 / ROS 2 bags in pure Python, without a ROS install.
+    "rosbags>=0.10",
+]
+
+[tool.uv]
+# No importable package yet; the project layout is decided in Phase 3.
+package = false
