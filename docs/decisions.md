@@ -251,6 +251,19 @@ past.
   visible inside a container. If it fails, the GPU environment falls back to
   pixi.
 
+**Update, 2026-11-27: GPU check passed.** `docker/check_gpu.sh` ran
+`nvidia-smi` and the CUDA n-body sample in containers, on Docker Desktop
+29.9.3 with the WSL2 backend.
+- The container sees the RTX 3060 Laptop GPU: 6 GB, compute capability 8.6.
+- The n-body benchmark computed on the GPU, at about 3.5 TFLOP/s single
+  precision.
+- The host driver (621.24) supports CUDA up to 13.5. Container images must not
+  need a newer CUDA than that.
+- CUDA extensions compiled in the GPU image should target compute capability
+  8.6.
+
+The pixi fallback is not needed.
+
 ---
 
 ## D-011: Bag conversion with rosbags, to MCAP
