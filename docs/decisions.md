@@ -118,3 +118,157 @@ easy to make and often fail silently.
 
 **Consequences.** Every module that handles poses or time depends on this.
 Changing it later would touch the whole codebase.
+
+---
+
+## D-006: ROS 2 Jazzy
+
+**Date:** 2026-11-27 · **Status:** accepted. This settles the open part of D-001.
+
+**Context.** The ROS 2 releases with long-term support are Humble (Ubuntu
+22.04), Jazzy (Ubuntu 24.04, supported until May 2029) and Lyrical (Ubuntu
+26.04, released May 2026, supported until May 2031). The Livox driver
+(`livox_ros_driver2`) and the community ROS 2 ports of FAST-LIO2 document
+Humble and Jazzy.
+
+**Decision.** Use ROS 2 Jazzy, in Docker on an Ubuntu 24.04 base image.
+
+**Alternatives.**
+- *Humble:* the most tested with LiDAR packages, but its support ends during
+  this project.
+- *Lyrical:* the longest support, but too new; the packages this project
+  needs do not document it yet.
+
+**Consequences.** Every ROS package that is used must build on Jazzy. That is
+checked for each one when it is added.
+
+---
+
+## D-007: LiDAR SLAM: KISS-ICP first, then FAST-LIO2
+
+**Date:** 2026-11-27 · **Status:** accepted
+
+**Context.** Goal 1 needs a LiDAR trajectory from each of the Mid-360 and the
+Avia. The bag also contains each LiDAR's own IMU.
+
+**Decision.**
+- KISS-ICP first. It uses LiDAR only, is installed with pip, runs from Python
+  without ROS, and has few parameters.
+- Then FAST-LIO2, which fuses LiDAR and IMU, run in the ROS 2 container from a
+  community ROS 2 port.
+- Both run on both LiDARs, so the results compare LiDAR-only with
+  LiDAR-inertial methods.
+
+**Alternatives.**
+- *FAST-LIO2 only:* there would be nothing simpler to compare it against, and
+  no trajectory until the ROS 2 environment works.
+- *LIO-SAM:* needs an IMU that reports its own orientation (9-axis). None of
+  the IMUs in the bag does: their orientation fields are all zero (see
+  docs/data.md).
+
+**Consequences.**
+- FAST-LIO2 is GPL-2.0. It is run as an external tool; its code is not copied
+  into this repository (D-003).
+- One port documents per-point timestamps only for the `livox_ros_driver2`
+  message. The Avia uses `livox_ros_driver`, whose fields are identical (see
+  docs/data.md). Relabelling its message type during conversion must be
+  tested.
+- Point times come from `header.stamp + offset_time`, never `timebase`,
+  because the Avia's `timebase` is on its own clock.
+
+---
+
+## D-008: Structure-from-Motion with COLMAP 4
+
+**Date:** 2026-11-27 · **Status:** accepted
+
+**Context.** Goal 1 needs an image-based trajectory. COLMAP 4.0 now includes
+GLOMAP as its global mapper, so a single tool offers both incremental and
+global reconstruction.
+
+**Decision.** Use COLMAP 4 and compare its incremental and global mappers.
+
+**Consequences.**
+- The 12 338 RGB frames (30 Hz) must be subsampled. How is decided when this
+  stage is designed.
+- The camera is rolling shutter. This is a known source of error for fast
+  motion.
+- The intrinsics come from M3DGR's `calibration.md`. Whether to fix them or
+  refine them is decided at this stage.
+- Monocular SfM has no scale, so it is aligned with a similarity transform.
+  The charter already requires this.
+
+---
+
+## D-009: Reconstruction with nerfstudio and Open3D
+
+**Date:** 2026-11-27 · **Status:** accepted for the frameworks. The specific
+models are still open.
+
+**Context.** Goal 2 covers reconstruction from both images and LiDAR.
+
+**Decision.**
+- From images: nerfstudio, with gsplat for Gaussian splatting.
+- From LiDAR: Open3D, for building the point-cloud map and meshing it.
+
+**Open.** Which neural models to train (for example nerfacto, depth-nerfacto
+or splatfacto, or alternatives) is explored and decided when this stage is
+reached.
+
+**Consequences.**
+- The GPU is an RTX 3060 Laptop with 6 GB of memory. This limits scene size
+  and batch size, especially for Gaussian splatting.
+- torch, CUDA, gsplat and any compiled extensions are pinned together as one
+  set (see D-010).
+
+---
+
+## D-010: Environments: Docker for Linux and GPU, uv on Windows
+
+**Date:** 2026-11-27 · **Status:** accepted, pending the GPU check below
+
+**Context.** The development machine runs Windows 11. ROS 2 Jazzy supports
+only Ubuntu as a main platform. CUDA extensions are each compiled for one
+torch and CUDA version, and building them on Windows was unreliable in the
+past.
+
+**Decision.**
+- A ROS 2 Jazzy Docker image, for SLAM and the live system.
+- A GPU Docker image built on an NVIDIA CUDA base image, for reconstruction.
+- The existing uv environment on Windows, for analysis: bag reading, evo and
+  plots.
+
+**Alternatives.**
+- *pixi (conda packages with a lockfile) natively on Windows:* no Docker
+  needed, but ROS 2 on Windows is poorly supported, and the CUDA build
+  problems would remain.
+- *Everything in one image:* torch/CUDA and ROS have conflicting needs, and
+  the image would be very large.
+
+**Consequences.**
+- Docker Desktop with the WSL2 backend must be installed.
+- The first task of the environment phase is a smoke test showing the GPU is
+  visible inside a container. If it fails, the GPU environment falls back to
+  pixi.
+
+---
+
+## D-011: Bag conversion with rosbags, to MCAP
+
+**Date:** 2026-11-27 · **Status:** accepted
+
+**Context.** D-001 requires a ROS 2 copy of the bag. The two Livox message
+types are not standard ROS messages.
+
+**Decision.**
+- Convert with `rosbags-convert`, part of the rosbags package already in the
+  uv environment.
+- Write MCAP, the default bag storage format in Jazzy.
+- Register both Livox message types from the definitions stored in the bag.
+- The converted bag goes in `data/interim/`. `data/raw/` stays untouched.
+
+**Alternatives.** Converting with the `rosbag2` tools inside a ROS 1 + ROS 2
+bridge setup needs a ROS 1 installation, which this project does not use.
+
+**Consequences.** The conversion is a pipeline stage with its own check:
+message counts and stamps of the converted bag must match docs/data.md.

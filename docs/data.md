@@ -80,6 +80,9 @@ arrived after the time it claims.
 - **LiDAR scans arrive about 100 ms after `header.stamp`.** [measured] Each scan
   covers about 100 ms (see below). [inferred] The stamp marks the *start* of the
   scan, and the message is published once the scan is complete.
+- **No IMU reports orientation.** [measured] On all three IMU topics the
+  orientation quaternion is `0 0 0 0`, in messages 0 and 5000 of each. Only
+  angular velocity and linear acceleration are usable.
 - **The Avia IMU is irregular.** [measured] Its mean rate is 203 Hz against a
   nominal 200 Hz, it has gaps of up to 108 ms, and messages arrive 4–110 ms after
   their stamp. The Mid-360 IMU and the camera IMU are regular.
