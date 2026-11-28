@@ -434,3 +434,27 @@ every commit:
 Local hooks can still be skipped (`git commit --no-verify`), and a squash
 merge on GitHub writes its commit message without running them. CI is the
 enforcement that cannot be skipped.
+
+**Update, 2026-11-28: CI and branch protection.**
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request and every
+  push to `main`, on Ubuntu 24.04. It runs `uv run pre-commit run
+  --all-files`, so it checks exactly what the local hooks check, using the
+  versions in `uv.lock` (`UV_LOCKED=1` fails the run if the lockfile is out
+  of date). uv itself is pinned to the version used locally.
+- **PR title** (`.github/workflows/pr-title.yml`): a squash merge uses the PR
+  title as the commit message on `main`, so the title is checked with the
+  same Conventional Commits hook as local commit messages. The title is
+  passed to the script through an environment variable, because pasting
+  untrusted text into a script lets it run commands.
+- GitHub Actions are pinned to commit SHAs, like the hook repositories.
+- **A ruleset on `main`**: changes only through a pull request, squash merge
+  only (rule 29), the `checks` and `pr-title` jobs must pass on a branch that
+  is up to date with `main`, no force-push (rule 29) and no deletion. No
+  approvals are required, because GitHub does not let an author approve
+  their own pull request. Nobody can bypass it, administrators included.
+
+**Alternatives.**
+- *Separate CI steps for ruff, mypy and pytest:* clearer logs, but a second
+  list of checks that can drift from the hooks.
+- *`amannn/action-semantic-pull-request` for the title:* a third-party action
+  given a token, for a check the existing hook already does.

@@ -1,0 +1,33 @@
+# Runs every pre-commit hook on all files: the same checks as a local commit
+# (D-014). Branch protection on main requires this job to pass.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:  # a new push to the same branch cancels the run it replaces
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_LOCKED: "1"  # every uv command fails if uv.lock is out of date
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # Actions are pinned to commit SHAs; the comment gives the tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          version: "0.10.5"  # same uv as local development
+          enable-cache: true
+      - run: uv sync
+      - run: uv run pre-commit run --all-files --show-diff-on-failure
