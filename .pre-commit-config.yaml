@@ -3,6 +3,9 @@
 # Run on all files by hand:
 #   uv run pre-commit run --all-files
 default_install_hook_types: [pre-commit, commit-msg]
+# Hooks run at the pre-commit stage unless they say otherwise; without this,
+# hooks with no stage would also run again on the commit message.
+default_stages: [pre-commit]
 
 repos:
   # Generic file checks. Revisions are frozen to commit SHAs; the comment
