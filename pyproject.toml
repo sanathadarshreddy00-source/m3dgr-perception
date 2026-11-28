@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "Multi-sensor trajectory estimation and 3D reconstruction on M3DGR Outdoor01"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "numpy>=2.5.5",
     # Reads ROS 1 / ROS 2 bags in pure Python, without a ROS install.
     "rosbags>=0.10",
 ]
@@ -19,6 +20,7 @@ module-name = "m3dgr"
 [dependency-groups]
 dev = [
     "mypy>=2.4.1",
+    "pytest>=9.2.0",
     "ruff>=0.17.6",
 ]
 
@@ -46,7 +48,17 @@ select = [
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src", "scripts"]
+files = ["src", "scripts", "tests"]
+# Tests import the scripts they test as top-level modules.
+mypy_path = "scripts"
 # Imports ROS 2 (rclpy, rosbag2_py), which exists only in the ROS container.
 exclude = ['scripts/ros2_dump_messages.py']
 strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Tests import scripts/*.py as modules; scripts are not part of the package.
+pythonpath = ["scripts"]
+# Real-data tests are skipped by default; run them with `-m slow`.
+addopts = ["-m", "not slow", "--strict-markers"]
+markers = ["slow: uses the real data in data/raw (minutes, not seconds)"]

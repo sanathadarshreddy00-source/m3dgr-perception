@@ -397,3 +397,22 @@ be enforced automatically. Until now they were followed by hand.
 **Consequences.** Existing scripts were reformatted and given small fixes,
 such as `itertools.pairwise` and `zip(..., strict=True)`. The three
 inventory scripts were rerun afterwards and produced identical JSON.
+
+**Update, 2026-11-28: tests.**
+- **pytest**, configured in `pyproject.toml`. Tests that use the real data in
+  `data/raw` are marked `slow` and skipped by default (rule 19); run them with
+  `uv run pytest -m slow`. They fail, rather than skip, when the data is
+  missing.
+- **Test bags are synthetic and generated during the test session**
+  (`tests/conftest.py`), not cut from Outdoor01 and committed. Nothing large
+  enters git, and no part of the dataset is redistributed; whether M3DGR's
+  license allows that was not checked. The synthetic bag covers the cases
+  that matter for conversion: a header `seq`, type constants, a NaN value and
+  the Livox custom type.
+- Tests import `scripts/*.py` directly (pytest `pythonpath`, mypy
+  `mypy_path`). The scripts are one-off data preparation, so they stay out of
+  the package until a second use appears (rule 12).
+- numpy is now a declared dependency. Two scripts import it directly; before,
+  it was installed only because rosbags needs it.
+- Not covered: check 3 of `verify_conversion.py`, which needs the ROS
+  container.
