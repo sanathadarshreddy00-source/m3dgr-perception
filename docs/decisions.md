@@ -221,6 +221,18 @@ reached.
 - torch, CUDA, gsplat and any compiled extensions are pinned together as one
   set (see D-010).
 
+**Update, 2026-11-28: GPU image postponed.** On PyPI and GitHub that day:
+- nerfstudio's latest release was 1.1.5, from November 2024. The last commit
+  on its main branch was in July 2025. The repository is not archived.
+- nerfstudio pins `gsplat==1.4.0`, while gsplat's latest release is 1.5.3.
+  Its development setup pins `torch==2.7.1`; the current torch is 2.15.
+
+An image built for nerfstudio would therefore freeze an older torch, CUDA and
+gsplat combination. The model choice is still open, and nerfstudio's
+inactivity is a reason to look at alternatives, so the GPU image is built at
+the start of the reconstruction stage, once the models are chosen. GPU access
+from containers is already verified (D-010).
+
 ---
 
 ## D-010: Environments: Docker for Linux and GPU, uv on Windows
