@@ -59,16 +59,18 @@ Python tools run on Windows through [uv](https://docs.astral.sh/uv/); ROS 2
 runs in Docker (`compose.yaml`).
 
 ```
-uv sync                 # install the package and dev tools, as pinned in uv.lock
-uv run ruff check .     # lint
-uv run ruff format .    # format
-uv run mypy             # type check (strict)
-uv run pytest           # fast tests, seconds
-uv run pytest -m slow   # tests on the real data in data/raw
+uv sync                            # install the package and dev tools, as pinned in uv.lock
+uv run pre-commit install          # once per clone: run the checks on every commit
+uv run pre-commit run --all-files  # all checks, by hand
+uv run ruff check .                # lint
+uv run ruff format .               # format
+uv run mypy                        # type check (strict)
+uv run pytest                      # fast tests, seconds
+uv run pytest -m slow              # tests on the real data in data/raw
 ```
 
-Tool settings are in `pyproject.toml`; the reasons are in
-[docs/decisions.md](docs/decisions.md) (D-014).
+Tool settings are in `pyproject.toml` and `.pre-commit-config.yaml`; the
+reasons are in [docs/decisions.md](docs/decisions.md) (D-014).
 
 ## Goals
 

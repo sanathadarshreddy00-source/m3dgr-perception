@@ -416,3 +416,21 @@ inventory scripts were rerun afterwards and produced identical JSON.
   it was installed only because rosbags needs it.
 - Not covered: check 3 of `verify_conversion.py`, which needs the ROS
   container.
+
+**Update, 2026-11-28: pre-commit hooks.** `.pre-commit-config.yaml` runs on
+every commit:
+- From `pre-commit/pre-commit-hooks`: trailing whitespace, end of file,
+  YAML syntax, merge-conflict markers, files over 500 KB (backs up rule 2)
+  and private keys (rule 31).
+- From `compilerla/conventional-pre-commit`, on the commit message:
+  Conventional Commits format (rule 26).
+- ruff, mypy and the fast tests (rule 27). These run through `uv run`, so
+  they use the versions pinned in `uv.lock`, not separate copies pinned in
+  the hook config. The versions cannot drift between the shell, the hooks
+  and CI.
+- The two external hook repositories are frozen to commit SHAs, because a
+  tag can be moved to different code.
+
+Local hooks can still be skipped (`git commit --no-verify`), and a squash
+merge on GitHub writes its commit message without running them. CI is the
+enforcement that cannot be skipped.
