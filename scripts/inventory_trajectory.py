@@ -6,7 +6,8 @@ reports: column count, duplicated rows and timestamps, sampling intervals,
 time span, quaternion norms, and the spatial extent and path length.
 
 Usage:
-    uv run python scripts/inventory_trajectory.py data/raw/Outdoor01.txt outputs/inventory/trajectory.json
+    uv run python scripts/inventory_trajectory.py data/raw/Outdoor01.txt \
+        outputs/inventory/trajectory.json
 """
 
 from __future__ import annotations
@@ -30,7 +31,9 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    lines = [ln for ln in args.traj.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
+    lines = [
+        ln for ln in args.traj.read_text().splitlines() if ln.strip() and not ln.startswith("#")
+    ]
     ncols = Counter(len(ln.split()) for ln in lines)
     if set(ncols) != {8}:
         raise ValueError(f"expected 8 columns on every line, got column counts {dict(ncols)}")
@@ -72,7 +75,10 @@ def main() -> None:
             "median": float(statistics.median(dt_u.tolist()) / 1e9),
             "max": float(dt_u.max() / 1e9),
         },
-        "quat_norm": {"min": float(np.linalg.norm(quat, axis=1).min()), "max": float(np.linalg.norm(quat, axis=1).max())},
+        "quat_norm": {
+            "min": float(np.linalg.norm(quat, axis=1).min()),
+            "max": float(np.linalg.norm(quat, axis=1).max()),
+        },
         "rows_identity_rotation": int((np.abs(quat - [0, 0, 0, 1]) < 1e-9).all(axis=1).sum()),
         "rows_zero_z": int((np.abs(xyz[:, 2]) < 1e-9).sum()),
         "xyz_min_m": xyz.min(axis=0).tolist(),
@@ -83,7 +89,7 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2))
     log.info("wrote %s", args.out)
-    print(json.dumps(report, indent=2))
+    print(json.dumps(report, indent=2))  # noqa: T201 - the report is the output
 
 
 if __name__ == "__main__":
