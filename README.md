@@ -44,7 +44,7 @@ ros2_ws/src/        ROS 2 packages
 docker/             one Dockerfile per environment
 configs/            all parameters, including calibration with its source
 experiments/        one record per run: config, commit, metrics, verdict
-tests/fixtures/     small test data cut from the real bag
+tests/              pytest; test bags are generated, not stored
 scripts/            one-off scripts (e.g. the data inventory)
 docs/               data inventory, conventions, decision log
 data/, outputs/     not in git; data/raw/ is read-only
@@ -63,6 +63,8 @@ uv sync                 # install the package and dev tools, as pinned in uv.loc
 uv run ruff check .     # lint
 uv run ruff format .    # format
 uv run mypy             # type check (strict)
+uv run pytest           # fast tests, seconds
+uv run pytest -m slow   # tests on the real data in data/raw
 ```
 
 Tool settings are in `pyproject.toml`; the reasons are in

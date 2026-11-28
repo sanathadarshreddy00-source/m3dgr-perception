@@ -9,8 +9,8 @@ need judgement and are enforced only in review.
 
 Tooling in place so far (D-014): ruff enforces rule 16 and flags blind
 `except Exception` (part of rule 11); mypy in strict mode enforces the type
-hints of rule 13. The other **[tool]** rules are followed by hand until their
-tool is added.
+hints of rule 13; pytest skips tests marked `slow` by default (rule 19). The
+other **[tool]** rules are followed by hand until their tool is added.
 
 ## Data
 
