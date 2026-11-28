@@ -1,0 +1,55 @@
+# Hooks run on every `git commit` (D-014). Install once per clone:
+#   uv run pre-commit install
+# Run on all files by hand:
+#   uv run pre-commit run --all-files
+default_install_hook_types: [pre-commit, commit-msg]
+# Hooks run at the pre-commit stage unless they say otherwise; without this,
+# hooks with no stage would also run again on the commit message.
+default_stages: [pre-commit]
+
+repos:
+  # Generic file checks. Revisions are frozen to commit SHAs; the comment
+  # gives the tag. Update with `uv run pre-commit autoupdate --freeze`.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files  # backs up conventions rule 2
+        args: [--maxkb=500]
+      - id: detect-private-key  # conventions rule 31
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: 81d3af62ea96a1f69f0cfa8745f253d3c4740896  # frozen: v4.5.0
+    hooks:
+      - id: conventional-pre-commit  # conventions rule 26
+        stages: [commit-msg]
+
+  # Project tools run from the uv environment, so their versions are the
+  # ones pinned in uv.lock: the same in the shell, the hooks and CI.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run mypy
+        language: system
+        pass_filenames: false  # checks the files configured in pyproject.toml
+        always_run: true
+      - id: pytest
+        name: pytest (fast tests)
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true  # tests also depend on non-Python files (msg, toml)

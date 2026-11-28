@@ -9,8 +9,10 @@ need judgement and are enforced only in review.
 
 Tooling in place so far (D-014): ruff enforces rule 16 and flags blind
 `except Exception` (part of rule 11); mypy in strict mode enforces the type
-hints of rule 13; pytest skips tests marked `slow` by default (rule 19). The
-other **[tool]** rules are followed by hand until their tool is added.
+hints of rule 13; pytest skips tests marked `slow` by default (rule 19).
+Pre-commit hooks run these on every commit (rule 27), check commit messages
+(rule 26), and block files over 500 KB (rule 2) and private keys (rule 31).
+The other **[tool]** rules are followed by hand until their tool is added.
 
 ## Data
 
