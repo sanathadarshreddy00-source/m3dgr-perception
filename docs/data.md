@@ -187,6 +187,50 @@ what scan deskewing needs.
 `livox_ros_driver2/CustomMsg` must be defined in the ROS 2 environment. The bag
 stores their full definitions, so a converter can register both.
 
+## ROS 2 copy [measured]
+
+`data/interim/Outdoor01_ros2/` holds a ROS 2 bag in MCAP format (6.7 GB),
+converted from the raw bag (D-011). To produce and verify it, run
+`bash scripts/convert_bag.sh`. The script also writes `PROVENANCE.json` next to
+the bag.
+
+**Conversion mode.** rosbags-convert has two modes:
+- the default, which copies the message definitions stored in the bag;
+- `--dst-typestore ros2_jazzy`, which upgrades types to Jazzy and is marked
+  experimental.
+
+A trial on four topics (`/odom`, `/camera/imu`, the GNSS fix and the Avia
+LiDAR) produced identical results in both modes. Both stored ROS 2-style headers
+without `seq`. The default mode is used.
+
+**Verification** (`scripts/verify_conversion.py`), passed on all 16 topics:
+1. Message type, count and the full sequence of record timestamps are identical
+   to the raw bag, for every message.
+2. Field values are identical on 52–70 sampled messages per topic, first and
+   last included. Floats are compared exactly.
+3. The first 2 messages of every topic whose type ROS 2 has installed (11
+   topics, both Livox LiDARs included), decoded by ROS 2 inside the container,
+   are identical to the raw bag. A negative test confirmed that a 1e-6 change in
+   one point coordinate is detected.
+
+Two differences are intended and excluded from the comparison:
+- `header.seq` is dropped, because ROS 2 headers have no sequence counter.
+  Order and timing are covered by check 1.
+- Constants listed next to fields by rosbags are ignored. They belong to the
+  type definition and are not message data.
+
+**Not playable in ROS 2:** the five raw u-blox topics that use `gnss_comm` types
+(`receiver_pvt`, `range_meas`, `ephem`, `glo_ephem`, `iono_params`). They are
+converted and pass checks 1 and 2, but the `gnss_comm` messages are not built
+in the ROS 2 workspace. No goal uses raw GNSS measurements, and `gnss_comm` is
+GPL-3.0. `/ublox_driver/receiver_lla` uses a standard type and does play.
+
+**Observation, from 2 scans only:** in the first two scans of each LiDAR, about
+68% of the points are exactly `(0, 0, 0)`: 69.5% and 68.1% for the Avia, 67.4%
+and 68.0% for the Mid-360. [inferred] These are probably placeholder points for
+missing returns. They must be filtered before SLAM, and their rate over the
+whole sequence is still to be measured.
+
 ## Calibration [M3DGR]
 
 Source: <https://github.com/sjtuyinjie/M3DGR/blob/main/calibration.md>. Its

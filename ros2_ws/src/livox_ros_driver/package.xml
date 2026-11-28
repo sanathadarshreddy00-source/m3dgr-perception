@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>livox_ros_driver</name>
+  <version>0.0.0</version>
+  <description>
+    Message definitions only for the Livox Avia (topic /livox/avia/lidar), so ROS 2 can play and
+    subscribe to the converted M3DGR bag. Not the Livox driver.
+    Upstream: https://github.com/Livox-SDK/livox_ros_driver
+  </description>
+  <maintainer email="244988845+sanathadarshreddy00-source@users.noreply.github.com">Sanath</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <depend>std_msgs</depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
