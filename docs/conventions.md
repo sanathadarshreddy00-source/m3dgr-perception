@@ -12,7 +12,9 @@ Tooling in place so far (D-014): ruff enforces rule 16 and flags blind
 hints of rule 13; pytest skips tests marked `slow` by default (rule 19).
 Pre-commit hooks run these on every commit (rule 27), check commit messages
 (rule 26), and block files over 500 KB (rule 2) and private keys (rule 31).
-The other **[tool]** rules are followed by hand until their tool is added.
+CI runs the same hooks on every pull request, and `main` accepts changes only
+through a pull request whose checks pass (rules 28 and 29). The other
+**[tool]** rules are followed by hand until their tool is added.
 
 ## Data
 
