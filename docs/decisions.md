@@ -361,3 +361,39 @@ definitions, taken from the definitions stored in the bag.
   FAST-LIO2 stage (D-007).
 - The license of the Livox driver sources is checked before their
   definitions are copied.
+
+---
+
+## D-014: Python quality tooling
+
+**Date:** 2026-11-28 · **Status:** accepted. Tests, pre-commit hooks and CI
+are added in later steps and recorded here as updates.
+
+**Context.** The rules marked **[tool]** in docs/conventions.md are meant to
+be enforced automatically. Until now they were followed by hand.
+
+**Decision.**
+- **Ruff** for linting and formatting, line length 100. Besides the common
+  rule sets, two enforce project conventions: `BLE` flags a blind
+  `except Exception` (rule 11) and `T20` flags `print` (rule 16). A deliberate
+  exception is marked on its line with `# noqa: <code>` and a reason, never
+  for a whole file, so new cases are still caught. Markdown files are not
+  formatted, because code blocks in the docs are aligned by hand.
+- **mypy in strict mode** on `src/` and `scripts/` (rule 13).
+  `scripts/ros2_dump_messages.py` is excluded because it imports ROS 2, which
+  is installed only in the container. Messages deserialised by rosbags are
+  annotated `Any`: their classes are built at run time from the definitions
+  stored in the bag, so there is no static type to name.
+- Both are dev dependencies, pinned in `uv.lock` (rule 23).
+
+**Alternatives.**
+- *flake8, isort and black:* the same checks as three tools, each with its
+  own config. Ruff covers all three.
+- *pyright:* faster, and the engine behind VS Code's Python type checking.
+  mypy was chosen because it is more widely used in Python projects.
+- *A lighter mypy mode for `scripts/`:* planned, but not needed. The scripts
+  passed strict mode after the `Any` annotations above.
+
+**Consequences.** Existing scripts were reformatted and given small fixes,
+such as `itertools.pairwise` and `zip(..., strict=True)`. The three
+inventory scripts were rerun afterwards and produced identical JSON.

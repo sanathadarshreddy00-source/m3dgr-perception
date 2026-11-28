@@ -24,6 +24,7 @@ import json
 import logging
 import statistics
 from collections import defaultdict
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +51,9 @@ def stamp_ns(stamp: Any) -> int:
 def to_plain(obj: Any) -> Any:
     """Recursively convert a deserialised ROS message into JSON-friendly types."""
     if hasattr(obj, "__dataclass_fields__"):
-        return {k: to_plain(getattr(obj, k)) for k in obj.__dataclass_fields__ if k != "__msgtype__"}
+        return {
+            k: to_plain(getattr(obj, k)) for k in obj.__dataclass_fields__ if k != "__msgtype__"
+        }
     if hasattr(obj, "tolist"):
         return obj.tolist()
     if isinstance(obj, (list, tuple)):
@@ -118,8 +121,9 @@ def inventory(bag_path: Path) -> dict[str, Any]:
             if i not in sample_idx[topic] and not always:
                 continue
             try:
-                msg = reader.deserialize(raw, conn.msgtype)
-            except Exception as exc:  # report, do not hide: recorded per topic
+                # Class built at runtime from the bag's own definitions: no static type.
+                msg: Any = reader.deserialize(raw, conn.msgtype)
+            except Exception as exc:  # noqa: BLE001 - recorded per topic in the report
                 deserialise_errors[topic] = repr(exc)
                 continue
 
@@ -144,7 +148,7 @@ def inventory(bag_path: Path) -> dict[str, Any]:
         for topic, times in sorted(record_times.items()):
             n = len(times)
             span = (times[-1] - times[0]) / 1e9 if n > 1 else 0.0
-            gaps = [b - a for a, b in zip(times, times[1:])]
+            gaps = [b - a for a, b in pairwise(times)]
             hs = header_stamps.get(topic, [])
             report["topics"][topic] = {
                 "msgtype": msgtypes[topic],

@@ -4,9 +4,13 @@ These conventions apply to everyone who changes this repository, human or AI
 agent.
 
 Rules marked **[tool]** are to be enforced automatically by linters,
-pre-commit hooks or CI, so they cannot be forgotten. That tooling does not
-exist yet. Until it does, they are followed by hand. Rules marked **[rule]**
+pre-commit hooks or CI, so they cannot be forgotten. Rules marked **[rule]**
 need judgement and are enforced only in review.
+
+Tooling in place so far (D-014): ruff enforces rule 16 and flags blind
+`except Exception` (part of rule 11); mypy in strict mode enforces the type
+hints of rule 13. The other **[tool]** rules are followed by hand until their
+tool is added.
 
 ## Data
 

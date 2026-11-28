@@ -53,6 +53,21 @@ data/, outputs/     not in git; data/raw/ is read-only
 Most folders are empty until the first stage that needs them. Conventions
 for contributing are in [docs/conventions.md](docs/conventions.md).
 
+## Development setup
+
+Python tools run on Windows through [uv](https://docs.astral.sh/uv/); ROS 2
+runs in Docker (`compose.yaml`).
+
+```
+uv sync                 # install the package and dev tools, as pinned in uv.lock
+uv run ruff check .     # lint
+uv run ruff format .    # format
+uv run mypy             # type check (strict)
+```
+
+Tool settings are in `pyproject.toml`; the reasons are in
+[docs/decisions.md](docs/decisions.md) (D-014).
+
 ## Goals
 
 ### 1. Trajectory estimation and comparison

@@ -69,7 +69,7 @@ def main() -> None:
             break
 
     # No default= fallback: an unconverted type should fail loudly, not become a string.
-    print(json.dumps({"messages": out, "type_not_installed": missing}))
+    print(json.dumps({"messages": out, "type_not_installed": missing}))  # noqa: T201 - stdout is piped to a file
 
 
 if __name__ == "__main__":

@@ -40,7 +40,9 @@ SAMPLES_PER_TOPIC = 50
 def to_plain(obj: Any) -> Any:
     """Recursively convert a rosbags message into plain Python values."""
     if hasattr(obj, "__dataclass_fields__"):
-        return {k: to_plain(getattr(obj, k)) for k in obj.__dataclass_fields__ if k != "__msgtype__"}
+        return {
+            k: to_plain(getattr(obj, k)) for k in obj.__dataclass_fields__ if k != "__msgtype__"
+        }
     if hasattr(obj, "tolist"):
         return obj.tolist()
     if isinstance(obj, (list, tuple)):
@@ -88,7 +90,7 @@ def first_difference(a: Any, b: Any, path: str = "") -> str | None:
     if isinstance(a, list) and isinstance(b, list):
         if len(a) != len(b):
             return f"{path}: length {len(a)} != {len(b)}"
-        for i, (x, y) in enumerate(zip(a, b)):
+        for i, (x, y) in enumerate(zip(a, b, strict=True)):
             d = first_difference(x, y, f"{path}[{i}]")
             if d:
                 return d
@@ -172,7 +174,9 @@ def main() -> None:
     for topic, idx in wanted.items():
         diffs = []
         for i in sorted(idx):
-            d = first_difference(raw_s.get(topic, {}).get(i), conv_s.get(topic, {}).get(i), f"msg[{i}]")
+            d = first_difference(
+                raw_s.get(topic, {}).get(i), conv_s.get(topic, {}).get(i), f"msg[{i}]"
+            )
             if d:
                 diffs.append(d)
         report["topics"].setdefault(topic, {})["sampled"] = len(idx)
@@ -190,7 +194,9 @@ def main() -> None:
         unexpected = {t: m for t, m in not_installed.items() if m not in allowed}
         if unexpected:
             failures.append(f"types not installed in ROS 2: {unexpected}")
-        first_raw = read_samples(args.raw, {t: set(range(len(m))) for t, m in dump["messages"].items()})
+        first_raw = read_samples(
+            args.raw, {t: set(range(len(m))) for t, m in dump["messages"].items()}
+        )
         for topic, msgs in dump["messages"].items():
             for i, ros_msg in enumerate(msgs):
                 d = first_difference(first_raw[topic][i], normalize(ros_msg), f"{topic} msg[{i}]")
@@ -209,7 +215,12 @@ def main() -> None:
     args.out.write_text(json.dumps(report, indent=2))
     for f in failures:
         log.error(f)
-    log.info("%s: %d topics, report at %s", "PASSED" if not failures else "FAILED", len(report["topics"]), args.out)
+    log.info(
+        "%s: %d topics, report at %s",
+        "PASSED" if not failures else "FAILED",
+        len(report["topics"]),
+        args.out,
+    )
     sys.exit(0 if not failures else 1)
 
 

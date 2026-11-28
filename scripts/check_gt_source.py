@@ -22,6 +22,7 @@ import logging
 import math
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from rosbags.highlevel import AnyReader
@@ -57,7 +58,8 @@ def main() -> None:
         if not conns:
             raise ValueError(f"topic {args.topic!r} not in bag")
         for conn, _, raw in reader.messages(connections=conns):
-            m = reader.deserialize(raw, conn.msgtype)
+            # Class built at runtime from the bag's own definitions: no static type.
+            m: Any = reader.deserialize(raw, conn.msgtype)
             t_fix.append(m.header.stamp.sec * 1_000_000_000 + m.header.stamp.nanosec)
             lla.append((m.latitude, m.longitude, m.altitude))
             status.append(int(m.status.status))
@@ -85,7 +87,11 @@ def main() -> None:
         "topic": args.topic,
         "n_file_rows": len(t_file),
         "n_fix_msgs": len(t_fix_a),
-        "stamp_diff_us": {"min": float(dt_us.min()), "max": float(dt_us.max()), "abs_max": float(np.abs(dt_us).max())},
+        "stamp_diff_us": {
+            "min": float(dt_us.min()),
+            "max": float(dt_us.max()),
+            "abs_max": float(np.abs(dt_us).max()),
+        },
         "horizontal_dist_from_origin_residual_m": {
             "abs_max": float(np.abs(resid).max()),
             "rms": float(np.sqrt(np.mean(resid**2))),
@@ -94,7 +100,10 @@ def main() -> None:
             "abs_max": float(np.abs(up[:n] - (xyz_file[:n, 2] - xyz_file[0, 2])).max()),
         },
         "enu_extent_m": {"min": enu.min(axis=0).tolist(), "max": enu.max(axis=0).tolist()},
-        "file_extent_m": {"min": xyz_file.min(axis=0).tolist(), "max": xyz_file.max(axis=0).tolist()},
+        "file_extent_m": {
+            "min": xyz_file.min(axis=0).tolist(),
+            "max": xyz_file.max(axis=0).tolist(),
+        },
         "first_fix_lla": lla_a[0].tolist(),
         "fix_status_counts": dict(Counter(status)),
         "covariance_type_counts": dict(Counter(cov_type)),
@@ -103,7 +112,7 @@ def main() -> None:
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2))
-    print(json.dumps(report, indent=2))
+    print(json.dumps(report, indent=2))  # noqa: T201 - the report is the output
 
 
 if __name__ == "__main__":
